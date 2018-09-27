@@ -1,67 +1,100 @@
 import React, { Component } from "react";
+import Axios from "axios";
 import PropTypes from "prop-types";
+
+const apiKey = process.env.REACT_APP_API_KEY;
 
 class BookInfo extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      description: "Fetching description for this book...",
+      error: ""
+    };
   }
 
+  componentDidMount() {
+    this.getDescription();
+  }
+
+  getDescription = () => {
+    const bookId = this.props.bookData.best_book.id;
+    const requestUri =
+      `https://cors-anywhere.herokuapp.com/` +
+      `https://www.goodreads.com/book/show/${bookId}?key=${apiKey}`;
+    Axios.get(requestUri)
+      .then(res => {
+        const parser = new DOMParser();
+        const XMLResponse = parser.parseFromString(res.data, "application/xml");
+
+        const parseError = XMLResponse.getElementsByTagName("parsererror");
+
+        if (parseError.length) {
+          this.setState({
+            error: "There was an error fetching results."
+          });
+        } else {
+          let description = XMLResponse.getElementsByTagName("description")[0]
+            .innerHTML;
+
+          description = description.replace("<![CDATA[", "").replace("]]>", "");
+
+          if (!description) {
+            description = "No description found.";
+          }
+          this.setState({ description });
+        }
+      })
+      .catch(error => {
+        this.setState({
+          error: error.toString()
+        });
+      });
+  };
+
   render() {
+    const { bookData } = this.props;
     return (
       <div className="row col-lg-12">
-        <h3 className="mb-3">
-          {
-            "How to Fail at Almost Everything and Still Win Big: Kind of the Story of My Life"
-          }
-        </h3>
-        <div className="col-lg-2">
+        <button className="btn btn-primary" onClick={this.props.collapseBook}>
+          {"<< Go Back"}
+        </button>
+
+        <h3 className="col-lg-12 mb-3 mt-3">{bookData.best_book.title}</h3>
+        <div className="col-lg-2 col-sm-4 ">
           <img
-            src={"https://images.gr-assets.com/books/1369823209m/17859574.jpg"}
-            style={{ height: "200px" }}
+            src={bookData.best_book.image_url}
+            height="200px"
+            width="130px"
             alt="book cover"
           />
           <p>
-            By: <span className="font-weight-bold">Scott Adams</span>
+            By:{" "}
+            <span className="font-weight-bold">
+              {bookData.best_book.author.name}
+            </span>
           </p>
-          <p>Avg. Rating: 4.09</p>
+          <p>Avg. Rating: {bookData.average_rating}</p>
         </div>
-        <div className="col-lg-10">
-          <p>
-            Scott Adams has likely failed at more things than anyone you’ve ever
-            met or anyone you’ve even heard of. So how did he go from hapless
-            office worker and serial failure to the creator of <i>Dilbert</i>,
-            one of the world’s most famous syndicated comic strips, in just a
-            few years? In{" "}
-            <i>How to Fail at Almost Everything and Still Win Big</i>, Adams
-            shares the strategy he has used since he was a teen to invite
-            failure in, to embrace it, then pick its pocket. <br />
-            <br />
-            No career guide can offer advice for success that works for
-            everyone. As Adams explains, your best bet is to study the ways of
-            others who made it big and try to glean some tricks and strategies
-            that make sense for you. Adams pulls back the covers on his own
-            unusual life and shares what he learned for turning one failure
-            after another into something good and lasting. Adams reveals that he
-            failed at just about everything he’s tried, including his corporate
-            career, his inventions, his investments, and his two restaurants.
-            But there’s a lot to learn from his personal story, and a lot of
-            humor along the way. While it’s hard for anyone to recover from a
-            personal or professional failure, Adams discovered some unlikely
-            truths that helped to propel him forward. For instance:
-            <br />
-            <br />• Goals are for losers. Systems are for winners.
-            <br />• "Passion" is bull. What you need is personal energy.
-            <br />• A combination of mediocre skills can make you surprisingly
-            valuable.
-            <br />• You can manage your odds in a way that makes you look lucky
-            to others.
-          </p>
+        <div className="col-lg-10 col-sm-8">
+          {(this.state.error && (
+            <p className="text-danger">{this.state.error}</p>
+          )) || (
+            <p dangerouslySetInnerHTML={{ __html: this.state.description }} />
+          )}
         </div>
         <div>
           <p>
-            Published October 15th 2013 by Little, Brown and Company.{" "}
-            <a href="https://www.goodreads.com/book/show/17859574">
+            Published Date:{" "}
+            {`${bookData.original_publication_day}/${
+              bookData.original_publication_month
+            }/${bookData.original_publication_year}`}
+            .{" "}
+            <a
+              href={`https://www.goodreads.com/book/show/${
+                bookData.best_book.id
+              }`}
+            >
               Learn More
             </a>
           </p>
@@ -72,7 +105,8 @@ class BookInfo extends Component {
 }
 
 BookInfo.propTypes = {
-  prop: PropTypes.object
+  bookData: PropTypes.object,
+  collapseBook: PropTypes.func
 };
 
 export default BookInfo;

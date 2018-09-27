@@ -1,16 +1,15 @@
 import React, { Component } from "react";
 import Axios from "axios";
 import AllResults from "./AllResults";
-import sampleJson from "../sample.json";
+import PropTypes from "prop-types";
 
 const apiKey = process.env.REACT_APP_API_KEY;
 
-export default class Search extends Component {
+class Search extends Component {
   state = {
     searchText: "",
     error: "",
-    fetchingData: false,
-    searchResults: sampleJson
+    fetchingData: false
   };
 
   onTextChange = e => {
@@ -54,7 +53,9 @@ export default class Search extends Component {
     } else {
       const XMLresults = new Array(...XMLResponse.getElementsByTagName("work"));
       const searchResults = XMLresults.map(result => this.XMLToJson(result));
-      this.setState({ searchResults, fetchingData: false });
+      this.setState({ fetchingData: false }, () => {
+        this.props.setResults(searchResults);
+      });
     }
   };
 
@@ -102,9 +103,22 @@ export default class Search extends Component {
         ) : (
           (this.state.error && (
             <p className="text-danger">{this.state.error}</p>
-          )) || <AllResults books={this.state.searchResults} />
+          )) || (
+            <AllResults
+              books={this.props.results}
+              expandBook={this.props.expandBook}
+            />
+          )
         )}
       </div>
     );
   }
 }
+
+Search.propTypes = {
+  results: PropTypes.array,
+  setResults: PropTypes.func,
+  expandBook: PropTypes.func
+};
+
+export default Search;
