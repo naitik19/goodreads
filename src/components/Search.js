@@ -1,14 +1,14 @@
-import React, { Component } from "react";
-import Axios from "axios";
-import AllResults from "./AllResults";
-import PropTypes from "prop-types";
+import React, { Component } from 'react';
+import Axios from 'axios';
+import AllResults from './AllResults';
+import PropTypes from 'prop-types';
 
-const apiKey = process.env.REACT_APP_API_KEY;
+const apiKey = '9Qz6GKZotCAAhd76i6TiQ'
 
 class Search extends Component {
   state = {
-    searchText: "",
-    error: "",
+    searchText: '',
+    error: '',
     fetchingData: false
   };
 
@@ -42,16 +42,16 @@ class Search extends Component {
   // parse string xml received from goodreads api
   parseXMLResponse = response => {
     const parser = new DOMParser();
-    const XMLResponse = parser.parseFromString(response, "application/xml");
-    const parseError = XMLResponse.getElementsByTagName("parsererror");
+    const XMLResponse = parser.parseFromString(response, 'application/xml');
+    const parseError = XMLResponse.getElementsByTagName('parsererror');
 
     if (parseError.length) {
       this.setState({
-        error: "There was an error fetching results.",
+        error: 'There was an error fetching results.',
         fetchingData: false
       });
     } else {
-      const XMLresults = new Array(...XMLResponse.getElementsByTagName("work"));
+      const XMLresults = new Array(...XMLResponse.getElementsByTagName('work'));
       const searchResults = XMLresults.map(result => this.XMLToJson(result));
       this.setState({ fetchingData: false }, () => {
         this.props.setResults(searchResults);
@@ -78,17 +78,17 @@ class Search extends Component {
   render() {
     return (
       <div>
-        <div className="form-group row">
+        <div className='form-group row'>
           <input
-            className="mr-1 col-sm-9 form-control"
-            type="text"
-            placeholder="Search Books By title, author, or ISBN..."
-            name="searchText"
+            className='mr-1 col-sm-9 form-control'
+            type='text'
+            placeholder='Search Books By title, author, or ISBN...'
+            name='searchText'
             onChange={this.onTextChange}
             value={this.state.searchText}
           />
           <button
-            className="col-sm-2 btn btn-primary"
+            className='col-sm-2 btn btn-primary'
             onClick={this.onButtonClick}
           >
             Search
@@ -99,10 +99,10 @@ class Search extends Component {
          * if fetching data, display "loading...", if error, display error message, else display search results
          */}
         {this.state.fetchingData ? (
-          <p className="lead text-center">{"loading... "}</p>
+          <p className='lead text-center'>{'loading... '}</p>
         ) : (
           (this.state.error && (
-            <p className="text-danger">{this.state.error}</p>
+            <p className='text-danger'>{this.state.error}</p>
           )) || (
             <AllResults
               books={this.props.results}
